@@ -1,0 +1,5 @@
+{
+  "name": "ZenCalendar Availability",
+  "description": "A modern, responsive calendar to manage reserved and free dates with iCal import/export and AI-powered natural language scheduling.",
+  "requestFramePermissions": []
+}
