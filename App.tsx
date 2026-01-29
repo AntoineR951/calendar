@@ -17,11 +17,15 @@ const App: React.FC = () => {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  // Load events from external iCal URL via Proxy
+  const CACHE_KEY = 'calendar_events_cache';
+  const CACHE_TIMESTAMP_KEY = 'calendar_events_cache_timestamp';
+
+  // Load events from external iCal URL via Proxy (with local cache fallback)
   useEffect(() => {
     const loadExternalEvents = async () => {
       setLoading(true);
       setError(null);
+      
       try {
         // Construction de l'URL via le proxy public
         // API AllOrigins attend ?url=...
@@ -38,9 +42,32 @@ const App: React.FC = () => {
         const parsedEvents = parseICS(icsText);
         setEvents(parsedEvents);
         
+        // Sauvegarder dans le cache local
+        localStorage.setItem(CACHE_KEY, JSON.stringify(parsedEvents));
+        localStorage.setItem(CACHE_TIMESTAMP_KEY, new Date().toISOString());
+        
       } catch (err) {
-        console.error("Failed to load calendar", err);
-        setError("Impossible de charger le calendrier Tokeet.");
+        console.error("Failed to load calendar from remote", err);
+        
+        // Essayer de charger depuis le cache local
+        const cachedEvents = localStorage.getItem(CACHE_KEY);
+        const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+        
+        if (cachedEvents) {
+          try {
+            const parsedCachedEvents = JSON.parse(cachedEvents) as CalendarEvent[];
+            setEvents(parsedCachedEvents);
+            
+            // Afficher la date du cache
+            const cacheDate = cachedTimestamp ? new Date(cachedTimestamp).toLocaleDateString('fr-FR') : 'inconnue';
+            setError(`Données du ${cacheDate} (hors ligne)`);
+          } catch (parseErr) {
+            console.error("Failed to parse cached events", parseErr);
+            setError("Impossible de charger le calendrier.");
+          }
+        } else {
+          setError("Impossible de charger le calendrier.");
+        }
       } finally {
         setLoading(false);
       }
