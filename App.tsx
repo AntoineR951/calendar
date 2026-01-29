@@ -17,17 +17,17 @@ const App: React.FC = () => {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  // Load events from external iCal URL via Proxy
+  // Load events from external iCal URL via Proxy (with Vercel Blob cache fallback)
   useEffect(() => {
     const loadExternalEvents = async () => {
       setLoading(true);
       setError(null);
+      
       try {
         // Construction de l'URL via le proxy public
         // API AllOrigins attend ?url=...
         const proxyUrl = `${APP_CONFIG.proxyUrl}?url=${encodeURIComponent(APP_CONFIG.icalUrl)}`;
         
-        console.log("Fetching:", proxyUrl);
         const response = await fetch(proxyUrl);
         
         if (!response.ok) throw new Error("Erreur réseau lors du chargement");
@@ -38,9 +38,36 @@ const App: React.FC = () => {
         const parsedEvents = parseICS(icsText);
         setEvents(parsedEvents);
         
+        // Sauvegarder dans le cache Vercel Blob
+        fetch('/api/calendar-cache', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: parsedEvents }),
+        }).catch(err => console.error('Failed to save cache:', err));
+        
       } catch (err) {
-        console.error("Failed to load calendar", err);
-        setError("Impossible de charger le calendrier Tokeet.");
+        console.error("Failed to load calendar from remote", err);
+        
+        // Essayer de charger depuis le cache Vercel Blob
+        try {
+          const cacheResponse = await fetch('/api/calendar-cache');
+          const cacheData = await cacheResponse.json();
+          
+          if (cacheData.cached && cacheData.events) {
+            setEvents(cacheData.events as CalendarEvent[]);
+            
+            // Afficher la date du cache
+            const cacheDate = cacheData.timestamp 
+              ? new Date(cacheData.timestamp).toLocaleDateString('fr-FR') 
+              : 'inconnue';
+            setError(`Données du ${cacheDate} (hors ligne)`);
+          } else {
+            setError("Impossible de charger le calendrier.");
+          }
+        } catch (cacheErr) {
+          console.error("Failed to load from cache", cacheErr);
+          setError("Impossible de charger le calendrier.");
+        }
       } finally {
         setLoading(false);
       }
