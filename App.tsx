@@ -17,55 +17,35 @@ const App: React.FC = () => {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  // Load events from external iCal URL via Proxy (with Vercel Blob cache fallback)
+  // Load events from external iCal URL via Proxy (with fallback URL)
   useEffect(() => {
+    const fetchCalendar = async (icalUrl: string): Promise<CalendarEvent[]> => {
+      const proxyUrl = `${APP_CONFIG.proxyUrl}?url=${encodeURIComponent(icalUrl)}`;
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) throw new Error("Erreur réseau lors du chargement");
+      
+      const icsText = await response.text();
+      return parseICS(icsText);
+    };
+
     const loadExternalEvents = async () => {
       setLoading(true);
       setError(null);
       
       try {
-        // Construction de l'URL via le proxy public
-        // API AllOrigins attend ?url=...
-        const proxyUrl = `${APP_CONFIG.proxyUrl}?url=${encodeURIComponent(APP_CONFIG.icalUrl)}`;
-        
-        const response = await fetch(proxyUrl);
-        
-        if (!response.ok) throw new Error("Erreur réseau lors du chargement");
-        
-        const icsText = await response.text();
-        
-        // Parsing
-        const parsedEvents = parseICS(icsText);
+        // Essayer l'URL principale
+        const parsedEvents = await fetchCalendar(APP_CONFIG.icalUrl);
         setEvents(parsedEvents);
-        
-        // Sauvegarder dans le cache Vercel Blob
-        fetch('/api/calendar-cache', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ events: parsedEvents }),
-        }).catch(err => console.error('Failed to save cache:', err));
-        
       } catch (err) {
-        console.error("Failed to load calendar from remote", err);
+        console.error("Failed to load from primary URL", err);
         
-        // Essayer de charger depuis le cache Vercel Blob
+        // Essayer l'URL de secours
         try {
-          const cacheResponse = await fetch('/api/calendar-cache');
-          const cacheData = await cacheResponse.json();
-          
-          if (cacheData.cached && cacheData.events) {
-            setEvents(cacheData.events as CalendarEvent[]);
-            
-            // Afficher la date du cache
-            const cacheDate = cacheData.timestamp 
-              ? new Date(cacheData.timestamp).toLocaleDateString('fr-FR') 
-              : 'inconnue';
-            setError(`Données du ${cacheDate} (hors ligne)`);
-          } else {
-            setError("Impossible de charger le calendrier.");
-          }
-        } catch (cacheErr) {
-          console.error("Failed to load from cache", cacheErr);
+          const parsedEvents = await fetchCalendar(APP_CONFIG.icalUrlFallback);
+          setEvents(parsedEvents);
+        } catch (fallbackErr) {
+          console.error("Failed to load from fallback URL", fallbackErr);
           setError("Impossible de charger le calendrier.");
         }
       } finally {
