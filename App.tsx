@@ -69,6 +69,7 @@ const App: React.FC = () => {
   const handleNext = () => {
     const newDate = new Date(currentDate);
     if (viewMode === ViewMode.MONTH) {
+      newDate.setDate(1); // Eviter le debordement de mois (ex: 31 jan -> 3 mars)
       newDate.setMonth(newDate.getMonth() + 1);
     } else {
       newDate.setFullYear(newDate.getFullYear() + 1);
@@ -79,6 +80,7 @@ const App: React.FC = () => {
   const handlePrev = () => {
     const newDate = new Date(currentDate);
     if (viewMode === ViewMode.MONTH) {
+      newDate.setDate(1); // Eviter le debordement de mois
       newDate.setMonth(newDate.getMonth() - 1);
     } else {
       newDate.setFullYear(newDate.getFullYear() - 1);
