@@ -141,7 +141,7 @@ const App: React.FC = () => {
       {/* Main Calendar View */}
       <main className="flex-grow">
         {viewMode === ViewMode.MONTH ? (
-          <div className="h-[600px] w-full">
+          <div className="w-full">
             <MonthView 
               year={currentYear} 
               month={currentMonth} 
