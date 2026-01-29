@@ -69,7 +69,7 @@ const MonthView: React.FC<MonthViewProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-white ${!compact ? 'rounded-2xl shadow-sm border border-slate-200 overflow-hidden' : ''}`}>
+    <div className={`flex flex-col bg-white ${!compact ? 'rounded-2xl shadow-sm border border-slate-200 overflow-hidden' : ''}`}>
       {/* Header */}
       <div className={`${compact ? 'py-2 px-2' : 'py-4 px-6'} bg-white border-b border-slate-100 flex items-center justify-between`}>
         <h3 className={`${compact ? 'text-sm' : 'text-lg'} font-semibold text-slate-800`}>
@@ -87,7 +87,7 @@ const MonthView: React.FC<MonthViewProps> = ({
       </div>
 
       {/* Grid */}
-      <div className={`grid grid-cols-7 flex-grow ${compact ? 'auto-rows-fr' : ''}`}>
+      <div className={`grid grid-cols-7 ${compact ? 'auto-rows-fr' : ''}`}>
         {grid.map((cell, idx) => {
           const status = getStatus(cell.date, cell.events);
           const bgStyle = getBackgroundStyle(status);
