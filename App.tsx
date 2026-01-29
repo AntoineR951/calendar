@@ -5,7 +5,12 @@ import YearView from './components/YearView';
 import { Button } from './components/Button';
 import { monthNames } from './services/dateUtils';
 import { parseICS, generateICS, downloadICS } from './services/icalService';
-import { APP_CONFIG } from './config';
+
+interface AppConfig {
+  icalUrl: string;
+  icalUrlFallback: string;
+  proxyUrl: string;
+}
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -19,9 +24,9 @@ const App: React.FC = () => {
 
   // Load events from external iCal URL via Proxy (with fallback URL)
   useEffect(() => {
-    const fetchCalendar = async (icalUrl: string): Promise<CalendarEvent[]> => {
-      const proxyUrl = `${APP_CONFIG.proxyUrl}?url=${encodeURIComponent(icalUrl)}`;
-      const response = await fetch(proxyUrl);
+    const fetchCalendar = async (icalUrl: string, proxyUrl: string): Promise<CalendarEvent[]> => {
+      const url = `${proxyUrl}?url=${encodeURIComponent(icalUrl)}`;
+      const response = await fetch(url);
       
       if (!response.ok) throw new Error("Erreur réseau lors du chargement");
       
@@ -34,20 +39,25 @@ const App: React.FC = () => {
       setError(null);
       
       try {
-        // Essayer l'URL principale
-        const parsedEvents = await fetchCalendar(APP_CONFIG.icalUrl);
-        setEvents(parsedEvents);
-      } catch (err) {
-        console.error("Failed to load from primary URL", err);
+        // Charger la config depuis le fichier public
+        const configResponse = await fetch('/config.json');
+        if (!configResponse.ok) throw new Error("Impossible de charger la configuration");
+        const config: AppConfig = await configResponse.json();
         
-        // Essayer l'URL de secours
         try {
-          const parsedEvents = await fetchCalendar(APP_CONFIG.icalUrlFallback);
+          // Essayer l'URL principale
+          const parsedEvents = await fetchCalendar(config.icalUrl, config.proxyUrl);
           setEvents(parsedEvents);
-        } catch (fallbackErr) {
-          console.error("Failed to load from fallback URL", fallbackErr);
-          setError("Impossible de charger le calendrier.");
+        } catch (err) {
+          console.error("Failed to load from primary URL", err);
+          
+          // Essayer l'URL de secours
+          const parsedEvents = await fetchCalendar(config.icalUrlFallback, config.proxyUrl);
+          setEvents(parsedEvents);
         }
+      } catch (err) {
+        console.error("Failed to load calendar", err);
+        setError("Impossible de charger le calendrier.");
       } finally {
         setLoading(false);
       }
