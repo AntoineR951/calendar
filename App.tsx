@@ -17,10 +17,7 @@ const App: React.FC = () => {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  const CACHE_KEY = 'calendar_events_cache';
-  const CACHE_TIMESTAMP_KEY = 'calendar_events_cache_timestamp';
-
-  // Load events from external iCal URL via Proxy (with local cache fallback)
+  // Load events from external iCal URL via Proxy (with Vercel Blob cache fallback)
   useEffect(() => {
     const loadExternalEvents = async () => {
       setLoading(true);
@@ -31,7 +28,6 @@ const App: React.FC = () => {
         // API AllOrigins attend ?url=...
         const proxyUrl = `${APP_CONFIG.proxyUrl}?url=${encodeURIComponent(APP_CONFIG.icalUrl)}`;
         
-        console.log("Fetching:", proxyUrl);
         const response = await fetch(proxyUrl);
         
         if (!response.ok) throw new Error("Erreur réseau lors du chargement");
@@ -42,30 +38,34 @@ const App: React.FC = () => {
         const parsedEvents = parseICS(icsText);
         setEvents(parsedEvents);
         
-        // Sauvegarder dans le cache local
-        localStorage.setItem(CACHE_KEY, JSON.stringify(parsedEvents));
-        localStorage.setItem(CACHE_TIMESTAMP_KEY, new Date().toISOString());
+        // Sauvegarder dans le cache Vercel Blob
+        fetch('/api/calendar-cache', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: parsedEvents }),
+        }).catch(err => console.error('Failed to save cache:', err));
         
       } catch (err) {
         console.error("Failed to load calendar from remote", err);
         
-        // Essayer de charger depuis le cache local
-        const cachedEvents = localStorage.getItem(CACHE_KEY);
-        const cachedTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-        
-        if (cachedEvents) {
-          try {
-            const parsedCachedEvents = JSON.parse(cachedEvents) as CalendarEvent[];
-            setEvents(parsedCachedEvents);
+        // Essayer de charger depuis le cache Vercel Blob
+        try {
+          const cacheResponse = await fetch('/api/calendar-cache');
+          const cacheData = await cacheResponse.json();
+          
+          if (cacheData.cached && cacheData.events) {
+            setEvents(cacheData.events as CalendarEvent[]);
             
             // Afficher la date du cache
-            const cacheDate = cachedTimestamp ? new Date(cachedTimestamp).toLocaleDateString('fr-FR') : 'inconnue';
+            const cacheDate = cacheData.timestamp 
+              ? new Date(cacheData.timestamp).toLocaleDateString('fr-FR') 
+              : 'inconnue';
             setError(`Données du ${cacheDate} (hors ligne)`);
-          } catch (parseErr) {
-            console.error("Failed to parse cached events", parseErr);
+          } else {
             setError("Impossible de charger le calendrier.");
           }
-        } else {
+        } catch (cacheErr) {
+          console.error("Failed to load from cache", cacheErr);
           setError("Impossible de charger le calendrier.");
         }
       } finally {
