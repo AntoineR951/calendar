@@ -23,8 +23,8 @@ export const getMonthGrid = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1);
   const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
   
-  // Adjust for Monday start if desired, currently Sunday start
-  const daysFromPrevMonth = startingDayOfWeek;
+  // Adjust for Monday start (0 = Monday, 6 = Sunday)
+  const daysFromPrevMonth = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
   
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const totalSlots = Math.ceil((daysFromPrevMonth + daysInMonth) / 7) * 7;
