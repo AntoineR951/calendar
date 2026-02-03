@@ -13,7 +13,7 @@ const YearView: React.FC<YearViewProps> = ({ year, events }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
       {months.map(month => (
-        <div key={month} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div key={month} className="border border-slate-200 overflow-hidden bg-white">
           <MonthView 
             year={year} 
             month={month} 
