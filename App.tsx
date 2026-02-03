@@ -22,14 +22,19 @@ const App: React.FC = () => {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  // Load events from external iCal URL via Proxy (with fallback URL)
+  // Load events from external iCal URL (direct fetch first, then proxy fallback)
   useEffect(() => {
-    const fetchCalendar = async (icalUrl: string, proxyUrl: string): Promise<CalendarEvent[]> => {
+    const fetchCalendarDirect = async (icalUrl: string): Promise<CalendarEvent[]> => {
+      const response = await fetch(icalUrl);
+      if (!response.ok) throw new Error("Erreur réseau lors du chargement direct");
+      const icsText = await response.text();
+      return parseICS(icsText);
+    };
+
+    const fetchCalendarViaProxy = async (icalUrl: string, proxyUrl: string): Promise<CalendarEvent[]> => {
       const url = `${proxyUrl}?url=${encodeURIComponent(icalUrl)}`;
       const response = await fetch(url);
-      
-      if (!response.ok) throw new Error("Erreur réseau lors du chargement");
-      
+      if (!response.ok) throw new Error("Erreur réseau lors du chargement via proxy");
       const icsText = await response.text();
       return parseICS(icsText);
     };
@@ -45,14 +50,14 @@ const App: React.FC = () => {
         const config: AppConfig = await configResponse.json();
         
         try {
-          // Essayer l'URL principale
-          const parsedEvents = await fetchCalendar(config.icalUrl, config.proxyUrl);
+          // Essayer d'abord une requête directe (plus rapide si CORS configuré)
+          const parsedEvents = await fetchCalendarDirect(config.icalUrl);
           setEvents(parsedEvents);
         } catch (err) {
-          console.error("Failed to load from primary URL", err);
+          console.error("Direct fetch failed, trying proxy...", err);
           
-          // Essayer l'URL de secours
-          const parsedEvents = await fetchCalendar(config.icalUrlFallback, config.proxyUrl);
+          // Fallback sur le proxy si la requête directe échoue
+          const parsedEvents = await fetchCalendarViaProxy(config.icalUrl, config.proxyUrl);
           setEvents(parsedEvents);
         }
       } catch (err) {
