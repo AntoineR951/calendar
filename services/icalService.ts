@@ -75,9 +75,8 @@ export const generateICS = (events: CalendarEvent[]): string => {
   
   events.forEach(evt => {
     const startStr = evt.start.replace(/-/g, '');
-    const endDateObj = new Date(evt.end);
-    endDateObj.setDate(endDateObj.getDate() + 1);
-    const endStr = formatDateISO(endDateObj).replace(/-/g, '');
+    // End date is already the checkout day, use as-is for iCal export
+    const endStr = evt.end.replace(/-/g, '');
 
     ics += "BEGIN:VEVENT\n";
     ics += `UID:${evt.id}\n`;
