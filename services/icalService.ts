@@ -42,20 +42,10 @@ export const parseICS = (icsContent: string): CalendarEvent[] => {
     } else if (cleanLine.startsWith('END:VEVENT')) {
       inEvent = false;
       if (currentEvent.start && currentEvent.end) {
-        // Tokeet and standard iCal use Exclusive End Dates for all-day events.
-        // E.g., Start: 11th, End: 14th -> The stay is 11, 12, 13.
-        // The 14th is the checkout day.
-        
-        // We calculate the logical "inclusive" end date for visualization
-        const dStart = new Date(currentEvent.start);
-        const dEnd = new Date(currentEvent.end);
-        
-        if (dEnd > dStart) {
-             const prevDay = new Date(dEnd);
-             prevDay.setDate(prevDay.getDate() - 1);
-             currentEvent.end = formatDateISO(prevDay);
-        }
-        
+        // iCal uses exclusive end dates for all-day events.
+        // E.g., DTSTART: 3rd, DTEND: 6th -> checkout day is 6th
+        // We keep the end date as-is (the checkout/departure day)
+        // The MonthView will show it as departure (diagonal bar)
         events.push(currentEvent as CalendarEvent);
       }
     } else if (inEvent) {
@@ -85,9 +75,8 @@ export const generateICS = (events: CalendarEvent[]): string => {
   
   events.forEach(evt => {
     const startStr = evt.start.replace(/-/g, '');
-    const endDateObj = new Date(evt.end);
-    endDateObj.setDate(endDateObj.getDate() + 1);
-    const endStr = formatDateISO(endDateObj).replace(/-/g, '');
+    // End date is already the checkout day, use as-is for iCal export
+    const endStr = evt.end.replace(/-/g, '');
 
     ics += "BEGIN:VEVENT\n";
     ics += `UID:${evt.id}\n`;

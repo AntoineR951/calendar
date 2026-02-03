@@ -34,11 +34,11 @@ const MonthView: React.FC<MonthViewProps> = ({
     };
   });
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   // Visualization constants
-  const COLOR_FREE = '#dcfce7'; // green-100
-  const COLOR_RESERVED = '#fca5a5'; // rose-300
+  const COLOR_FREE = 'transparent';
+  const COLOR_RESERVED = '#C7B0A1';
   
   const getStatus = (date: string, dayEvents: CalendarEvent[]) => {
     if (dayEvents.length === 0) return 'free';

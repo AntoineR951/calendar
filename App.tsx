@@ -14,7 +14,7 @@ interface AppConfig {
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.MONTH);
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.YEAR);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,28 +68,14 @@ const App: React.FC = () => {
 
   const handleNext = () => {
     const newDate = new Date(currentDate);
-    if (viewMode === ViewMode.MONTH) {
-      newDate.setDate(1); // Eviter le debordement de mois (ex: 31 jan -> 3 mars)
-      newDate.setMonth(newDate.getMonth() + 1);
-    } else {
-      newDate.setFullYear(newDate.getFullYear() + 1);
-    }
+    newDate.setFullYear(newDate.getFullYear() + 1);
     setCurrentDate(newDate);
   };
 
   const handlePrev = () => {
     const newDate = new Date(currentDate);
-    if (viewMode === ViewMode.MONTH) {
-      newDate.setDate(1); // Eviter le debordement de mois
-      newDate.setMonth(newDate.getMonth() - 1);
-    } else {
-      newDate.setFullYear(newDate.getFullYear() - 1);
-    }
+    newDate.setFullYear(newDate.getFullYear() - 1);
     setCurrentDate(newDate);
-  };
-
-  const handleToday = () => {
-    setCurrentDate(new Date());
   };
 
   const handleExport = () => {
@@ -123,20 +109,7 @@ const App: React.FC = () => {
       {/* Navigation & Controls */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         
-        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
-          <button 
-            onClick={() => setViewMode(ViewMode.MONTH)}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === ViewMode.MONTH ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Mois
-          </button>
-          <button 
-            onClick={() => setViewMode(ViewMode.YEAR)}
-             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === ViewMode.YEAR ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Année
-          </button>
-        </div>
+        <div></div>
 
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={handlePrev} className="!px-2">
@@ -144,7 +117,7 @@ const App: React.FC = () => {
           </Button>
           
           <h2 className="text-xl font-semibold text-slate-800 w-48 text-center tabular-nums">
-            {viewMode === ViewMode.MONTH ? `${monthNames[currentMonth]} ${currentYear}` : `${currentYear}`}
+            {currentYear}
           </h2>
 
           <Button variant="ghost" onClick={handleNext} className="!px-2">
@@ -152,9 +125,7 @@ const App: React.FC = () => {
           </Button>
         </div>
 
-        <Button variant="secondary" onClick={handleToday}>
-          Aujourd'hui
-        </Button>
+        <div></div>
       </div>
 
       {/* Main Calendar View */}
@@ -179,27 +150,22 @@ const App: React.FC = () => {
       {/* Legend */}
       <footer className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm text-slate-600">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 border border-slate-300 rounded bg-[#dcfce7]"></div>
+          <div className="w-6 h-6 border border-slate-300 rounded bg-transparent"></div>
           <span>Libre</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 border border-slate-300 rounded bg-[#fca5a5]"></div>
+          <div className="w-6 h-6 border border-slate-300 rounded bg-[#C7B0A1]"></div>
           <span>Réservé</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 border border-slate-300 rounded" style={{ background: 'linear-gradient(135deg, #dcfce7 50%, #fca5a5 50%)' }}></div>
+          <div className="w-6 h-6 border border-slate-300 rounded" style={{ background: 'linear-gradient(135deg, transparent 50%, #C7B0A1 50%)' }}></div>
           <span>Arrivée</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 border border-slate-300 rounded" style={{ background: 'linear-gradient(135deg, #fca5a5 50%, #dcfce7 50%)' }}></div>
+          <div className="w-6 h-6 border border-slate-300 rounded" style={{ background: 'linear-gradient(135deg, #C7B0A1 50%, transparent 50%)' }}></div>
           <span>Départ</span>
         </div>
-        <div className="flex items-center gap-2">
-           <div className="w-6 h-6 rounded bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
-            {new Date().getDate()}
-           </div>
-           <span>Aujourd'hui</span>
-        </div>
+
       </footer>
 
     </div>
