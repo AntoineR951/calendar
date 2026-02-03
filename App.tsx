@@ -14,7 +14,7 @@ interface AppConfig {
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.MONTH);
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.YEAR);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,9 +109,7 @@ const App: React.FC = () => {
       {/* Navigation & Controls */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-600">Année</span>
-        </div>
+        <div></div>
 
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={handlePrev} className="!px-2">
