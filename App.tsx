@@ -92,27 +92,17 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
       {/* Header Section */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Disponibilités</h1>
             {loading && <span className="text-xs text-indigo-500 font-medium animate-pulse">Chargement...</span>}
             {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
-            {!loading && !error && events.length > 0 && <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">Synchronisé</span>}
           </div>
-
-        </div>
-
-        <div className="flex flex-wrap gap-2 hidden">
-          <Button variant="outline" onClick={handleExport} disabled={events.length === 0}>
-             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            Export .ics
-          </Button>
         </div>
       </header>
 
       {/* Navigation & Controls */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         
         <div></div>
 
